@@ -1,8 +1,6 @@
 import NavBar from "@/components/common/NavBar";
 import "./globals.css";
 
-
-
 export default function RootLayout({
   children,
 }: Readonly<{

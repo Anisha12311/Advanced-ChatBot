@@ -1,6 +1,7 @@
 import Dashboard from "@/components/Dashboard";
 import { ErrorBoundary } from "react-error-boundary";
 import Error from "./error";
+import "../style/chatbox.css";
 
 export default function Home() {
   return (

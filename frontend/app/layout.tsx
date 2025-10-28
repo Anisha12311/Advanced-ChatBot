@@ -9,9 +9,9 @@ export default function RootLayout({
   console.log(" test layout");
   return (
     <html lang="en">
-      <body>
+      <body className="h-screen flex flex-col bg-[#eef0f8] dark:bg-gray-900">
         <NavBar />
-        {children}
+        <main className="flex-1 overflow-hidden">{children}</main>
       </body>
     </html>
   );

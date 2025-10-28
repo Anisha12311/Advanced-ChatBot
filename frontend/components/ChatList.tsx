@@ -47,10 +47,10 @@ const ChatList = () => {
                   alt={user.name}
                 />
                 <div className="min-w-0 flex-auto">
-                  <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">
+                  <p className="text-sm font-semibold text-[#475f7b] dark:text-white truncate">
                     {user.name}
                   </p>
-                  <p className="mt-1 text-xs text-gray-500 dark:text-gray-400 truncate">
+                  <p className="mt-1 text-xs text-[#737373] dark:text-gray-400 truncate">
                     {user.email}
                   </p>
                 </div>

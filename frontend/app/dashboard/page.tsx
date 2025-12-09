@@ -1,15 +1,11 @@
-import SignUp from "@/components/SignUp";
+import Dashboard from "@/components/Dashboard";
 import { ErrorBoundary } from "react-error-boundary";
 import Error from "../error";
 
-const Register = () => {
+export default function Home() {
   return (
     <ErrorBoundary FallbackComponent={Error}>
-      <section className="h-full">
-        <SignUp />
-      </section>
+      <Dashboard />
     </ErrorBoundary>
   );
-};
-
-export default Register;
+}

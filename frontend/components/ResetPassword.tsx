@@ -1,61 +1,67 @@
 "use client";
 
-import { useFetch } from "@/hooks/useFetch";
-import { useEffect, useState } from "react";
+import { StyledTextField } from "@/style/mui/Form.styled";
+import { Box, Button, IconButton, InputAdornment } from "@mui/material";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
-import CloseIcon from "@mui/icons-material/Close";
-import { Box, Button, IconButton, InputAdornment } from "@mui/material";
-import { StyledTextField } from "@/style/mui/Form.styled";
+import { useEffect, useState } from "react";
 import { SubmitHandler, useForm, useWatch } from "react-hook-form";
+import { useFetch } from "@/hooks/useFetch";
+import { toast } from "react-toastify";
 import { PASSWORD_RULES } from "@/lib/constant/Chat";
 import CheckIcon from "@mui/icons-material/Check";
-import { IForm, PASSWORD_TYPES } from "@/interface/auth";
-import { toast } from "react-toastify";
-import { COOKIES } from "@/lib/constant/Storage";
-import { useRouter } from "next/navigation";
-import Cookies from "js-cookie";
+import CloseIcon from "@mui/icons-material/Close";
+import { useRouter, useSearchParams } from "next/navigation";
 
-const SignUp = () => {
+interface IResetPassword {
+  password: string;
+  confirmPassword: string;
+}
+
+const ResetPassword = () => {
   const [showPassword, setShowPassword] = useState(false);
-
+  const searchParams = useSearchParams();
+  const { fetchApi, error } = useFetch();
+  const id = searchParams?.get("id");
+  const token = searchParams?.get("token");
+  const router = useRouter();
   const {
+    formState: { errors },
     register,
     handleSubmit,
-    formState: { errors },
     control,
-  } = useForm<IForm>();
-  const router = useRouter();
-  const { fetchApi, error } = useFetch();
+  } = useForm<IResetPassword>();
 
   const handleClickShowPassword = () => {
     setShowPassword(!showPassword);
   };
 
-  const onSubmit: SubmitHandler<IForm> = async (data) => {
-    const submitData = await fetchApi({
-      apiUrl: "auth/register",
-      method: "POST",
-      body: data,
-    });
-    console.log("submitData", submitData, error);
+  const onSubmit: SubmitHandler<IResetPassword> = async (data) => {
+    console.log("anilog ~ data:", data);
+    const { password, confirmPassword } = data;
 
-    if (submitData) {
-      toast.success(submitData.message, {
+    if (password !== confirmPassword) {
+      toast.error("Password and confirm password must be match", {
         position: "top-right",
         autoClose: 5000,
       });
-      Cookies.set(COOKIES.ACCESS_TOKEN, submitData?.accessToken, {
-        secure: true,
-        expires: 7,
-      });
-      Cookies.set(COOKIES.REFERESH_TOKEN, submitData?.refreshToken, {
-        secure: true,
-        expires: 7,
+      return;
+    }
+    if (!id && !token) return;
+    const reset = await fetchApi({
+      method: "POST",
+      apiUrl: `auth/resetPassword?id=${id}&token=${token}`,
+      body: data,
+    });
+    if (reset && reset.message) {
+      toast.success(reset.message, {
+        position: "top-right",
+        autoClose: 5000,
       });
       router.push("/signin");
     }
   };
+
   useEffect(() => {
     if (!error) return;
     toast.error(error, {
@@ -79,14 +85,13 @@ const SignUp = () => {
   };
 
   const allPassedRules = Object.values(rules).every(Boolean);
-
   return (
-    <section className="bg-gray-1 mt-4  py-18 dark:bg-dark justify-center flex items-center h-full">
+    <section className="bg-gray-1 py-16 dark:bg-dark justify-center flex items-center h-full">
       <div className="container mx-auto">
         <div className="-mx-4 flex flex-wrap">
           <div className="w-full px-4">
-            <div className="relative mx-auto max-w-[525px] pt-8 pb-8 overflow-hidden rounded-lg bg-white px-8  text-center sm:px-12  dark:bg-dark-2">
-              <div className="mb-7 text-center md:mb-7">
+            <div className="relative mx-auto max-w-[525px] pt-8 pb-8 overflow-hidden rounded-lg bg-white px-10  text-center sm:px-12  dark:bg-dark-2">
+              <div className="mb-8 text-center md:mb-8">
                 <div
                   className={`cursor-pointer text-2xl font-bold
           text-gray-800 dark:text-gray-100
@@ -94,43 +99,16 @@ const SignUp = () => {
           transition-colors duration-300
         `}
                 >
-                  Sign Up
+                  Reset Password
                 </div>
               </div>
               <form onSubmit={handleSubmit(onSubmit)}>
                 <Box sx={{ width: "100%", gap: "20px", display: "grid" }}>
                   <StyledTextField
-                    id="name-basic"
-                    label="Name"
-                    variant="outlined"
-                    fullWidth
-                    {...register("name", { required: "Name is required." })}
-                    error={!!errors.name}
-                    helperText={errors.name?.message}
-                  />
-
-                  <StyledTextField
-                    id="email-basic"
-                    label="Email"
-                    variant="outlined"
-                    fullWidth
-                    {...register("email", {
-                      required: "Email is required",
-                      pattern: {
-                        value:
-                          /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/,
-                        message: "Enter a valid email format.",
-                      },
-                    })}
-                    error={!!errors.email}
-                    helperText={errors.email?.message}
-                  />
-                  <StyledTextField
                     id="outlined-adornment-password"
                     fullWidth
-                    type={showPassword ? "text" : "password"}
                     {...register("password", {
-                      required: "Password is required",
+                      required: "New Password is required",
                     })}
                     error={!!errors.password}
                     helperText={errors.password?.message}
@@ -157,13 +135,46 @@ const SignUp = () => {
                         ),
                       },
                     }}
-                    label="Password"
+                    label="New Password"
+                  />
+
+                  <StyledTextField
+                    id="outlined-adornment-password"
+                    fullWidth
+                    {...register("confirmPassword", {
+                      required: "Confirm Password is required",
+                    })}
+                    error={!!errors.confirmPassword}
+                    helperText={errors.confirmPassword?.message}
+                    slotProps={{
+                      input: {
+                        endAdornment: (
+                          <InputAdornment position="end">
+                            <IconButton
+                              aria-label={
+                                showPassword
+                                  ? "hide the password"
+                                  : "display the password"
+                              }
+                              onClick={handleClickShowPassword}
+                              edge="end"
+                            >
+                              {showPassword ? (
+                                <VisibilityOff />
+                              ) : (
+                                <Visibility />
+                              )}
+                            </IconButton>
+                          </InputAdornment>
+                        ),
+                      },
+                    }}
+                    label="Confirm Password"
                   />
                   {password && !allPassedRules && (
                     <>
                       {PASSWORD_RULES?.map((rule) => {
-                        const vaild = rules[rule.key as keyof PASSWORD_TYPES];
-                        console.log(rule.key, vaild);
+                        const vaild = rules[rule.key as keyof typeof rules];
                         return (
                           <Box
                             key={rule.key}
@@ -196,12 +207,6 @@ const SignUp = () => {
                   </Button>
                 </Box>
               </form>
-              <p className="text-base text-body-color dark:text-dark-6 mt-5">
-                <span className="pr-0.5"> Already have an account? </span>
-                <a href="/signin" className="text-primary hover:underline">
-                  Sign In
-                </a>
-              </p>
             </div>
           </div>
         </div>
@@ -210,4 +215,4 @@ const SignUp = () => {
   );
 };
 
-export default SignUp;
+export default ResetPassword;

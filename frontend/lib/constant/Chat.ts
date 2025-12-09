@@ -70,3 +70,11 @@ export const users = [
     image: "/images/a5.png",
   },
 ];
+
+export const PASSWORD_RULES = [
+  { label: "At least one lowercase letter", key: "lowercase" },
+  { label: "At least one uppercase letter", key: "uppercase" },
+  { label: "At least one number", key: "number" },
+  { label: "Minimum 8 characters", key: "length" },
+  { label: "Must have one special character", key: "special" },
+];

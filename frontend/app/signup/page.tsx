@@ -5,6 +5,7 @@ import Error from "../error";
 const Register = () => {
   return (
     <ErrorBoundary FallbackComponent={Error}>
+     
       <section className="h-full">
         <SignUp />
       </section>

@@ -49,7 +49,7 @@ const SignUp = () => {
         secure: true,
         expires: 7,
       });
-      Cookies.set(COOKIES.REFERESH_TOKEN, submitData?.refreshToken, {
+      Cookies.set(COOKIES.REFRESH_TOKEN, submitData?.refreshToken, {
         secure: true,
         expires: 7,
       });

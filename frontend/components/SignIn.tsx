@@ -11,6 +11,7 @@ import { toast } from "react-toastify";
 import { COOKIES } from "@/lib/constant/Storage";
 import { useRouter } from "next/navigation";
 import Cookies from "js-cookie";
+import { useAuth } from "@/context/AuthContext";
 
 interface ILogin {
   email: string;
@@ -26,7 +27,7 @@ const SignIn = () => {
     register,
     handleSubmit,
   } = useForm<ILogin>();
-
+  const { login } = useAuth();
   const { fetchApi, error } = useFetch();
 
   const handleClickShowPassword = () => {
@@ -42,6 +43,8 @@ const SignIn = () => {
     console.log("loginData", loginData);
 
     if (loginData) {
+      login(loginData?.accessToken);
+
       toast.success(loginData.message, {
         position: "top-right",
         autoClose: 5000,
@@ -50,11 +53,11 @@ const SignIn = () => {
         secure: true,
         expires: 7,
       });
-      Cookies.set(COOKIES.REFERESH_TOKEN, loginData?.refreshToken, {
+      Cookies.set(COOKIES.REFRESH_TOKEN, loginData?.refreshToken, {
         secure: true,
         expires: 7,
       });
-      router.push("/dashboard");
+      router.push("/");
     }
   };
 
@@ -67,7 +70,7 @@ const SignIn = () => {
   }, [error]);
 
   return (
-    <section className="bg-gray-1 py-16 dark:bg-dark justify-center flex items-center h-full">
+    <div className="bg-gray-1 py-16 dark:bg-dark justify-center flex items-center h-full">
       <div className="container mx-auto">
         <div className="-mx-4 flex flex-wrap">
           <div className="w-full px-4">
@@ -162,7 +165,7 @@ const SignIn = () => {
           </div>
         </div>
       </div>
-    </section>
+    </div>
   );
 };
 

@@ -3,12 +3,28 @@ const { User } = require("../models/User");
 const bcrypt = require("bcryptjs");
 const nodemailer = require("nodemailer");
 
-const generateToken = (id) => {
-  return JWT.sign({ id }, process.env.JWT_SECRET, { expiresIn: "15m" });
+const generateToken = (user) => {
+  return JWT.sign(
+    {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+    },
+    process.env.JWT_SECRET,
+    { expiresIn: "15m" }
+  );
 };
 
-const generateRefreshToken = (id) => {
-  return JWT.sign({ id }, process.env.JWT_REFRESH_EXPIRE, { expiresIn: "7d" });
+const generateRefreshToken = (user) => {
+  return JWT.sign(
+    {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+    },
+    process.env.JWT_REFRESH_EXPIRE,
+    { expiresIn: "7d" }
+  );
 };
 
 const registerUser = async (req, res, next) => {
@@ -28,8 +44,8 @@ const registerUser = async (req, res, next) => {
     const salt = await bcrypt.genSalt(12);
     const hashPassword = await bcrypt.hash(password, salt);
     const user = await User.create({ name, email, password: hashPassword });
-    const accessToken = generateToken(user._id);
-    const refreshToken = generateRefreshToken(user._id);
+    const accessToken = generateToken(user);
+    const refreshToken = generateRefreshToken(user);
     user.refreshToken = refreshToken;
     user.save();
 
@@ -72,8 +88,8 @@ const loginUser = async (req, res, next) => {
       return res.status(401).json({ message: "Invaild credentials" });
     }
 
-    const accessToken = generateToken(exisitngUser._id);
-    const refreshToken = generateRefreshToken(exisitngUser._id);
+    const accessToken = generateToken(exisitngUser);
+    const refreshToken = generateRefreshToken(exisitngUser);
 
     res.status(200).json({
       message: "Login successfully",
@@ -91,6 +107,7 @@ const loginUser = async (req, res, next) => {
 };
 
 const refreshAccessToken = async (req, res, next) => {
+  console.log("anilog ~ req.body:", req.body);
   if (!req.body) {
     return res.status(400).json({ message: "Request body is missing." });
   }
@@ -99,25 +116,28 @@ const refreshAccessToken = async (req, res, next) => {
     return res.status(401).json({ message: "Refresh Token is required" });
   }
   try {
-    const user = await User.findOne({ refreshToken });
+    const decode = JWT.verify(refreshToken, process.env.JWT_REFRESH_EXPIRE);
+    console.log("anilog ~ decode:", decode);
+
+    const user = await User.findOne({ _id: decode.id });
 
     if (!user) {
       return res.status(403).json({ message: "Invaild Credentials" });
     }
-    JWT.verify(refreshToken, process.env.JWT_REFRESH_EXPIRE, (err, decode) => {
-      if (err) {
-        return res.status(403).json({ message: "Invaild and expired token" });
-      }
-      const newAccessToken = generateToken(decode.id);
-      const newRefreshToken = generateRefreshToken(decode.id);
+    const payload = {
+      _id: decode.id,
+      name: decode.name,
+      email: decode.email,
+    };
+    const newAccessToken = generateToken(payload);
+    const newRefreshToken = generateRefreshToken(payload);
 
-      user.refreshToken = newRefreshToken;
-      user.save();
+    user.refreshToken = newRefreshToken;
+    user.save();
 
-      res.status(200).json({
-        accessToken: newAccessToken,
-        refreshAccessToken: newRefreshToken,
-      });
+    res.status(200).json({
+      accessToken: newAccessToken,
+      refreshAccessToken: newRefreshToken,
     });
   } catch (error) {
     next(error);
@@ -141,7 +161,7 @@ const forgetPassword = async (req, res, next) => {
       return res.status(404).json({ message: "User does not exists" });
     }
 
-    const token = generateToken(exisitingUsr._id);
+    const token = generateToken(exisitingUsr);
     const resetURL = `http://localhost:3000/resetpassword?id=${exisitingUsr._id}&token=${token}`;
 
     const transporter = nodemailer.createTransport({

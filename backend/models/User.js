@@ -20,6 +20,14 @@ const UserSchema = new mongoose.Schema(
     refreshToken: {
       type: String,
     },
+    isOnline: {
+      type: Boolean,
+      default: false,
+    },
+    lastActive: {
+      type: Date,
+      default: null,
+    },
   },
   { timestamps: true }
 );
